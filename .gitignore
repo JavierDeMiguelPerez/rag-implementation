@@ -1,0 +1,10 @@
+# Seguridad
+.env
+
+# Entorno virtual y temporales
+venv/
+__pycache__/
+*.pyc
+
+# Base de datos local (es mejor que quien se baje el código la genere de cero)
+chroma_db/
