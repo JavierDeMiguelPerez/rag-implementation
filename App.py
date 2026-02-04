@@ -12,6 +12,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from langchain_core.runnables import Runnable
+from index_data import main as run_ingestion
 
 # --- CONFIGURATION ---
 PAGE_TITLE = "RAG Contextual Assistant"
@@ -48,9 +49,15 @@ def get_rag_chain() -> Runnable:
     embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
     
     if not os.path.exists(CHROMA_PATH):
-        st.error(f"Vector database not found at '{CHROMA_PATH}'. Please run 'ingest.py' first.")
-        st.stop()
+        with st.spinner("Knowledge base not found. Generating it for the first time... (This may take a minute)"):
+            try:
+                run_ingestion() 
+                st.success("Knowledge base generated successfully!")
+            except Exception as e:
+                st.error(f"Critical error generating database: {e}")
+                st.stop()
         
+    # 4. Load Data Base
     vector_db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embeddings)
     
     # 3. Configure LLM
