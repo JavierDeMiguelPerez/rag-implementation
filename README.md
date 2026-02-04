@@ -1,8 +1,11 @@
 # Context-Aware RAG Architecture
 
 A modular, production-oriented implementation of a **Retrieval-Augmented Generation (RAG)** system designed to interrogate long-form technical documents (PDFs) while maintaining conversational context.
-
 This architecture is content-agnostic and can be adapted to any technical, legal, or corporate documentation by swapping the source file. It leverages **History-Aware Retrieval** to handle follow-up questions effectively.
+
+![Demo del RAG](<img width="731" height="605" alt="image" src="https://github.com/user-attachments/assets/5b1ef6d5-a733-4b42-9664-80b4fa74d930" />)
+
+---
 
 ## Key Features
 
