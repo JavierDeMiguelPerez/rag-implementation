@@ -79,19 +79,27 @@ def get_rag_chain() -> Runnable:
     
     history_aware_retriever = create_history_aware_retriever(
         llm, 
-        vector_db.as_retriever(search_kwargs={"k": 5}), 
+        vector_db.as_retriever(search_kwargs={"k": 10}), 
         contextualize_q_prompt
     )
 
     # 5. Question Answering Chain Setup
-    qa_system_prompt = (
-        "You are an expert assistant for document analysis. "
-        "Use the following pieces of retrieved context to answer the question. "
-        "If the answer is not in the context, clearly state that you do not have that information. "
-        "Keep your answer professional, concise, and helpful.\n\n"
-        "CONTEXT:\n"
-        "{context}"
-    )
+    qa_system_prompt = """
+    You are an expert academic tutor and subject matter specialist. 
+    Utilize the provided context fragments to formulate a **comprehensive, exhaustive, and nuanced** response to the user's inquiry.
+    
+    Operational Guidelines:
+    1. **Depth of Analysis**: Avoid brevity. Provide thorough explanations of underlying concepts, ensuring a high level of technical or academic detail.
+    2. **Structural Integrity**: If the context identifies specific categories, rules, or lists, expand upon each item individually, providing a dedicated and complete explanation for every point.
+    3. **Illustrative Evidence**: Incorporate any examples present in the text to contextualize and reinforce your arguments.
+    4. **Cohesion and Flow**: Synthesize the information logically to ensure a fluid transition between ideas, maintaining a professional and pedagogical tone throughout.
+    
+    Integrity Constraint: 
+    If the provided context does not contain sufficient information to answer the query accurately, state this clearly and honestly. Do not hallucinate information outside the provided scope.
+    
+    CONTEXT:
+    {context}
+    """
     
     qa_prompt = ChatPromptTemplate.from_messages(
         [
