@@ -31,13 +31,17 @@ Ensure you have Python 3.10+ installed.
 
 ### 2. Installation
 Clone the repository and install the required dependencies:
+```bash
 git clone <repository-url>
 cd <repository-folder>
 pip install -r requirements.txt
+```
 
 ### 3. Configuration
 Create a .env file in the root directory and add your Groq API key:
+```python
 GROQ_API_KEY=gsk_your_api_key_here
+```
 
 ### 4. Customization (Optional)
 To use your own data:
@@ -47,9 +51,14 @@ To use your own data:
 
 ### 5. Execution
 Step 1: Ingest Data Generate the vector embeddings (run this once or whenever the PDF changes).
+```bash
 python ingest.py
+```
+
 Step 2: Launch Application Start the chat interface.
+```bash
 streamlit run app.py
+```
 
 ---
 Developed as a Proof of Concept (PoC) for modern RAG architectures.
