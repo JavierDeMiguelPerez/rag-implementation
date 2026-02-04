@@ -1,34 +1,55 @@
-# ⚓ Naval Bot: Asistente Filosófico RAG
+# Context-Aware RAG Architecture
 
-Un sistema de **Retrieval-Augmented Generation (RAG)** capaz de responder preguntas filosóficas basándose exclusivamente en el libro *"El Almanaque de Naval Ravikant"*, evitando alucinaciones y manteniendo el contexto de la conversación.
+A modular, production-oriented implementation of a **Retrieval-Augmented Generation (RAG)** system designed to interrogate long-form technical documents (PDFs) while maintaining conversational context.
 
-## 🚀 Arquitectura Técnica
+This architecture is content-agnostic and can be adapted to any technical, legal, or corporate documentation by swapping the source file. It leverages **History-Aware Retrieval** to handle follow-up questions effectively.
 
-Este proyecto implementa un pipeline de datos completo:
+## Key Features
 
-* **Ingesta de Datos:** Procesamiento de PDF con particionado optimizado (Recursive Character Splitter) para maximizar la recuperación de contexto.
-* **Vector Store:** Uso de **ChromaDB** para almacenamiento de embeddings generados con `sentence-transformers/all-MiniLM-L6-v2`.
-* **Cerebro (LLM):** Integración con **Llama 3.3 (70b)** vía Groq API para inferencia de ultra-baja latencia.
-* **Memoria Conversacional:** Implementación de un *History-Aware Retriever* que reformula las preguntas del usuario basándose en el historial del chat.
-* **Interfaz:** Frontend interactivo construido con **Streamlit**.
+* **Strict RAG Implementation:** Minimizes hallucinations by strictly grounding LLM responses in vector-retrieved context. If the information isn't in the docs, the model admits ignorance.
+* **Context-Aware Memory:** Solves the "vague follow-up" problem (e.g., *"How do I apply that?"*) by employing an intermediate LLM step to reformulate queries based on chat history before hitting the vector database.
+* **Robust Ingestion Pipeline:** Uses an optimized `RecursiveCharacterTextSplitter` strategy with significant overlap to preserve context in lists, tables, and complex arguments.
+* **Modern Tech Stack:** Built on Python 3.11+, LangChain v0.3, ChromaDB, and the latest Llama 3.3 (via Groq) for low-latency inference.
 
-## 🛠️ Instalación y Uso
+## Tech Stack
 
-1. **Clonar el repositorio:**
-    git clone [URL_DE_TU_REPO]
-    cd naval_bot
-2. **Instalar dependencias:**
-    python -m venv venv
-    source venv/bin/activate  # O venv\Scripts\activate en Windows
+* **Orchestration:** LangChain (Community & Core)
+* **LLM Inference:** Llama 3.3 70B Versatile (via Groq API)
+* **Vector Store:** ChromaDB (Local persistence)
+* **Embedding Model:** `sentence-transformers/all-MiniLM-L6-v2` (HuggingFace)
+* **Frontend:** Streamlit
+
+## Project Structure
+
+* `ingest.py`: **ETL Pipeline**. Handles document loading, text splitting, embedding generation, and vector store persistence.
+* `app.py`: **Inference Engine**. A Streamlit application managing session state, chat history, and the RAG retrieval chain.
+
+## Quick Start
+
+### 1. Prerequisites
+Ensure you have Python 3.10+ installed.
+
+### 2. Installation
+Clone the repository and install the required dependencies:
+    git clone <repository-url>
+    cd <repository-folder>
     pip install -r requirements.txt
-3. **Configurar entorno: Crea un archivo .env y añade tu API Key de Groq:**
-    GROQ_API_KEY=gsk_...
-4. **Generar la Base de Datos Vectorial:**
-    python 2_database_final.py
-5. **Lanzar la App:**
-    streamlit run RagBot.py
 
-## 🧠 Retos Superados
- - Optimización de estrategias de Chunking (comparativa entre Semantic Chunking vs Fixed-size) para mejorar la recuperación de listas y conceptos largos.
+### 3. Configuration
+Create a .env file in the root directory and add your Groq API key:
+    GROQ_API_KEY=gsk_your_api_key_here
 
- - Gestión de estado de sesión en Streamlit para mantener la coherencia del chat.
+### 4. Customization (Optional)
+To use your own data:
+    1. Replace the PDF file in the root directory.
+    2. Update the FILE_PATH constant in ingest.py.
+    3. (Optional) Update the system prompts in app.py to match the tone of your new document.
+
+### 5. Execution
+Step 1: Ingest Data Generate the vector embeddings (run this once or whenever the PDF changes).
+    python ingest.py
+Step 2: Launch Application Start the chat interface.
+    streamlit run app.py
+
+---
+Developed as a Proof of Concept (PoC) for modern RAG architectures.
