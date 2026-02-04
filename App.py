@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Generator
 
 # LangChain & Vector Store Imports
 from langchain_community.vectorstores import Chroma
@@ -37,10 +37,6 @@ st.markdown(
 def get_rag_chain() -> Runnable:
     """
     Initializes the RAG (Retrieval-Augmented Generation) chain.
-    This function is cached to avoid reloading the model and embeddings on every interaction.
-
-    Returns:
-        Runnable: The compiled LangChain RAG pipeline.
     """
     
     # 1. API Key Validation
@@ -61,7 +57,6 @@ def get_rag_chain() -> Runnable:
     llm = ChatGroq(model=LLM_MODEL_NAME, temperature=LLM_TEMPERATURE)
     
     # 4. History Aware Retriever Setup
-    # This prompts the LLM to rephrase the user's latest query using the chat history context
     contextualize_q_system_prompt = (
         "Given a chat history and the latest user question "
         "which might reference context in the chat history, "
@@ -116,6 +111,25 @@ def get_rag_chain() -> Runnable:
     
     return rag_chain
 
+# --- HELPER FOR STREAMING ---
+def process_stream(chain, input_text, chat_history):
+    """
+    Generator function that yields the answer text chunk by chunk.
+    It filters out the intermediate steps (like context retrieval) and
+    only returns the final answer tokens.
+    """
+    # Usamos .stream() en lugar de .invoke()
+    response_stream = chain.stream({
+        "input": input_text,
+        "chat_history": chat_history
+    })
+    
+    for chunk in response_stream:
+        # La cadena RAG devuelve chunks de diccionario.
+        # A veces traen 'context', a veces 'answer'. Solo queremos 'answer'.
+        if "answer" in chunk:
+            yield chunk["answer"]
+
 # --- MAIN APPLICATION LOGIC ---
 
 def main():
@@ -143,10 +157,8 @@ def main():
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # 2. Generate Assistant Response
+        # 2. Generate Assistant Response (STREAMING)
         with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            message_placeholder.markdown("*Analyzing documents...*")
             
             # Convert session state to LangChain message format
             chat_history_objs: List[BaseMessage] = []
@@ -157,20 +169,17 @@ def main():
                     chat_history_objs.append(AIMessage(content=msg["content"]))
             
             try:
-                # Execute RAG Chain
-                response = rag_chain.invoke({
-                    "input": prompt, 
-                    "chat_history": chat_history_objs
-                })
+                # We create the generator
+                stream_generator = process_stream(rag_chain, prompt, chat_history_objs)
                 
-                full_response = response["answer"]
+                # Streamlit consumes the generator, makes the efect and returns the final text
+                full_response = st.write_stream(stream_generator)
                 
-                # Display and Save Response
-                message_placeholder.markdown(full_response)
+                # Save final response to history
                 st.session_state.messages.append({"role": "assistant", "content": full_response})
                 
             except Exception as e:
-                message_placeholder.error(f"An error occurred while generating the response: {e}")
+                st.error(f"An error occurred while generating the response: {e}")
 
 if __name__ == "__main__":
     main()
